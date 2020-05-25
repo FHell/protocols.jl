@@ -1,9 +1,5 @@
 # This file shows the proposed expansion of Protocol macro
 
-struct ProtocolError
-    message
-end
-
 # Protocol Iterable
 #   start::Int64
 #
@@ -38,13 +34,12 @@ next(::NotIterable, t) = println("Argument does not implement or declare Protoco
 secondnext(::NotIterable, t) = println("Argument does not implement or declare Protocol Iterable")
 
 
-
-
 # We now define a type...
 struct T
   start::Int64
   c
 end
+
 
 # impl Iterable for T
 #
@@ -62,20 +57,19 @@ if ! hasfieldtype(T, :start, Int64)  # Not sure how to implement this...
   throw(ProtocolError("Field T.start needs to be of type Int64"))
 end
 
-
 # Taken directly from the body of the implementation
 function next(::Iterable, t::T)
   t.c
 end
 
-function secondnext(::Iterable, t::T) # default implementation
+function secondnext(::Iterable, t::T) # default implementation taken from the Protocol
   next(t)
   next(t)
 end
 
 # Check that the body of the implementation does what it should:
-if ! hasmethod(next, Tuple{Iterable, T}) # Not sure how to implement the type restriction...
-  throw(ProtocolError("Type T has no field start"))
+if ! hasmethod(next, Tuple{Iterable, T})
+  throw(ProtocolError("Protocol function next not implemented for Type T"))
 end
 
 is_Iterable(::T) = Iterable()
@@ -87,8 +81,8 @@ is_Iterable(::T) = Iterable()
 # end
 
 function get_third(::Iterable, b)
-  secondnext(Iterable(), b)
-  next(Iterable(), b)
+  secondnext(b)
+  next(b)
 end
 get_third(b) = get_third(is_Iterable(b), b)
 get_third(::NotIterable, b) = throw(ProtocolError("First argument doesn't implement Iterable."))
@@ -97,10 +91,9 @@ get_third(::NotIterable, b) = throw(ProtocolError("First argument doesn't implem
 # we get an object of type T
 t = T(1, 5)
 
-# and call it
+# and call get_third on it:
 get_third(t)
 
 # and calling it this way:
-arr = [1]
-get_third(arr)
-# raises "Argument does not implement or declare Protocol Iterable"
+get_third(1)
+# raises "Type of argument arr does not implement protocol Iterable"
