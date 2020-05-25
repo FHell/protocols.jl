@@ -31,8 +31,8 @@ function secondnext(::Iterable, t) # default implementation
 end
 
 
-next(t) = throw(ProtocolError("No protocol declared in first argument."))
-secondnext(t) = throw(ProtocolError("No protocol declared in first argument."))
+next(t) = next(is_iterable(t), t)
+secondnext(t) = secondnext(is_iterable(t), t)
 
 next(::NotIterable, t) = println("Argument does not implement or declare Protocol Iterable")
 secondnext(::NotIterable, t) = println("Argument does not implement or declare Protocol Iterable")
@@ -54,9 +54,14 @@ end
 #
 # end
 
-if ! hasfield(T, :start) # Not sure how to implement the type restriction...
+if ! hasfield(T, :start)
   throw(ProtocolError("Type T has no field start"))
 end
+
+if ! hasfieldtype(T, :start, Int64)  # Not sure how to implement this...
+  throw(ProtocolError("Field T.start needs to be of type Int64"))
+end
+
 
 # Taken directly from the body of the implementation
 function next(::Iterable, t::T)
@@ -64,8 +69,8 @@ function next(::Iterable, t::T)
 end
 
 function secondnext(::Iterable, t::T) # default implementation
-  next(Iterable(), t)
-  next(Iterable(), t)
+  next(t)
+  next(t)
 end
 
 # Check that the body of the implementation does what it should:
@@ -85,22 +90,17 @@ function get_third(::Iterable, b)
   secondnext(Iterable(), b)
   next(Iterable(), b)
 end
-get_third(b) = throw(ProtocolError("No protocol declared in first argument."))
+get_third(b) = get_third(is_Iterable(b), b)
 get_third(::NotIterable, b) = throw(ProtocolError("First argument doesn't implement Iterable."))
 
 
 # we get an object of type T
 t = T(1, 5)
 
-# and call it, explicitly treating t as Iterable:
-
-# get_third(t :~ Iterable)
-get_third(is_Iterable(t), t)
-
-# This, on the other hand, should raise an error (ProtocolError("No protocol declared in first argument.")):
+# and call it
 get_third(t)
 
 # and calling it this way:
 arr = [1]
-get_third(is_Iterable(arr), arr)
+get_third(arr)
 # raises "Argument does not implement or declare Protocol Iterable"
